@@ -1,4 +1,4 @@
-function [F,c_v] = granger_cause(x,y,alpha,max_lag)
+function [F,c_v] = granger_cause(x,y,alpha,max_lag,min_var)
 % [F,c_v] = granger_cause(x,y,alpha,max_lag)
 % Granger Causality test
 % Does Y Granger Cause X?
@@ -85,7 +85,7 @@ while i <= max_lag
     BIC(i,:) = T*log(r'*r/T) + (i+1)*log(T);
     
     %Put the restricted residual sum of squares in the RSS_R vector
-    RSS_R(i,:) = r'*r;
+    RSS_R(i,:) =var(r);
     
     i = i+1;
     
@@ -120,12 +120,13 @@ while i <= max_lag
     end
     %Apply the regress function. b = betahat, bint corresponds to the 95%
     %confidence intervals for the regression coefficients and r = residuals
+    xstar = xstar+1;
     [b,bint,r] = regress(ystar,xstar);
     
     %Find the bayesian information criterion
     BIC(i,:) = T*log(r'*r/T) + (i+1)*log(T);
     
-    RSS_U(i,:) = r'*r;
+    RSS_U(i,:) = var(r);
     
     i = i+1;
     
@@ -134,13 +135,17 @@ end
 [dummy,y_lag] =min(BIC);
 
 %The numerator of the F-statistic
-F_num = ((RSS_R(x_lag,:) - RSS_U(y_lag,:))/y_lag);
+F_num = RSS_R(x_lag,:);
 
 %The denominator of the F-statistic
-F_den = RSS_U(y_lag,:)/(T-(x_lag+y_lag+1));
+F_den = RSS_U(y_lag,:);
+
+if F_den <= min_var
+    F_den = min_var;
+end
 
 %The F-Statistic
-F = F_num/F_den;
+F = log(F_num/F_den);
 
 c_v = finv(1-alpha,y_lag,(T-(x_lag+y_lag+1)));
 
@@ -148,4 +153,5 @@ c_v = finv(1-alpha,y_lag,(T-(x_lag+y_lag+1)));
     
     
     
-   
+    
+
