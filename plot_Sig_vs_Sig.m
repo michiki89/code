@@ -10,7 +10,7 @@ signal1Ang = angle(hilbert(signal1));
 signal2Ang = angle(hilbert(signal2));
 
 
-signalPlot = figure(1);
+signalPlot = figure(3);
 
 
 ax1 = subplot(3,2,[1,2]);
